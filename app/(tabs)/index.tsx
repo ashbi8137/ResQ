@@ -10,6 +10,8 @@ export default function HomeScreen() {
     { id: 'accident', icon: 'car', label: 'Accident' },
     { id: 'fire', icon: 'flame', label: 'Fire' },
     { id: 'disaster', icon: 'earth', label: 'Disaster' },
+    { id: 'other', icon: 'ellipsis-horizontal', label: 'Other', fullWidth: true },
+
   ];
 
   const triggerAlert = () => {
@@ -32,6 +34,7 @@ export default function HomeScreen() {
             key={type.id}
             style={[
               styles.incidentButton,
+              type.fullWidth && styles.fullWidthButton,
               selectedIncident === type.id && styles.incidentSelected
             ]}
             onPress={() => setSelectedIncident(type.id)}
@@ -41,6 +44,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         ))}
       </View>
+      
 
       {/* Safe to Call Toggle */}
       <View style={styles.toggleContainer}>
@@ -108,9 +112,13 @@ const styles = StyleSheet.create({
   },
   incidentLabel: {
     color: '#fff',
-    marginTop: 6,
+    marginTop: 1,
     fontSize: 16,
   },
+  fullWidthButton: {
+  width: '100%',
+  aspectRatio: 6 / 1, // adjusts height to keep it visually balanced
+},
   toggleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
