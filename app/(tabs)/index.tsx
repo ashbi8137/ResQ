@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Switch, Alert } from 'react-native';
-import { Ionicons } from '@expo/vector-icons'; // for icons
+import { Ionicons } from '@expo/vector-icons';
+
 export default function HomeScreen() {
   const [safeToCall, setSafeToCall] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<string | null>(null);
+  const [pressCount, setPressCount] = useState(0);
 
   const incidentTypes = [
     { id: 'violence', icon: 'alert-circle', label: 'Violence' },
     { id: 'accident', icon: 'car', label: 'Accident' },
     { id: 'fire', icon: 'flame', label: 'Fire' },
     { id: 'disaster', icon: 'earth', label: 'Disaster' },
-    { id: 'other', icon: 'ellipsis-horizontal', label: 'Other', fullWidth: true },
-
+    { id: 'other', icon: 'ellipsis-horizontal', label: 'Other' },
   ];
 
   const triggerAlert = () => {
@@ -19,36 +20,53 @@ export default function HomeScreen() {
       Alert.alert('Select Incident Type', 'Please choose the type of incident before triggering.');
       return;
     }
-    Alert.alert('Alert Triggered', `Type: ${selectedIncident}, Safe to call: ${safeToCall}`);
-    // integrate your backend alert logic here
+    Alert.alert('🚨 Alert Triggered', `Type: ${selectedIncident}, Safe to call: ${safeToCall}`);
+    // your backend alert logic here
+  };
+
+  const handlePanicPress = () => {
+    const newCount = pressCount + 1;
+    setPressCount(newCount);
+
+    if (newCount === 3) {
+      triggerAlert();
+      setPressCount(0); // reset after triggering
+    }
   };
 
   return (
     <View style={styles.container}>
-      
       {/* Incident Type */}
       <Text style={styles.sectionTitle}>Select Incident Type</Text>
       <View style={styles.incidentGrid}>
-        {incidentTypes.map(type => (
-          <TouchableOpacity
-            key={type.id}
-            style={[
-              styles.incidentButton,
-              type.fullWidth && styles.fullWidthButton,
-              selectedIncident === type.id && styles.incidentSelected
-            ]}
-            onPress={() => setSelectedIncident(type.id)}
-          >
-            <Ionicons name={type.icon as any} size={32} color="#fff" />
-            <Text style={styles.incidentLabel}>{type.label}</Text>
-          </TouchableOpacity>
-        ))}
+        {incidentTypes.map((type) => {
+          const isSelected = selectedIncident === type.id;
+          const isFullWidth = type.id === 'other';
+
+          return (
+            <TouchableOpacity
+              key={type.id}
+              style={[
+                styles.incidentButton,
+                isFullWidth && styles.fullWidthButton,
+                isSelected && styles.incidentSelected,
+              ]}
+              onPress={() => setSelectedIncident(type.id)}
+            >
+              <Ionicons name={type.icon as any} size={32} color="#fff" />
+              <Text style={styles.incidentLabel}>{type.label}</Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
-      
 
       {/* Safe to Call Toggle */}
       <View style={styles.toggleContainer}>
-        <Text style={styles.toggleLabel}>Safe to Call</Text>
+        <Ionicons
+          name={safeToCall ? 'call' : 'call-outline'}
+          size={26}
+          color={safeToCall ? '#4CAF50' : '#ff4d4d'}
+        />
         <Switch
           value={safeToCall}
           onValueChange={setSafeToCall}
@@ -58,7 +76,7 @@ export default function HomeScreen() {
       </View>
 
       {/* Main Panic Trigger */}
-      <TouchableOpacity style={styles.panicButton} onPress={triggerAlert}>
+      <TouchableOpacity style={styles.panicButton} onPress={handlePanicPress}>
         <Text style={styles.panicButtonText}>SEND ALERT</Text>
       </TouchableOpacity>
 
@@ -68,7 +86,7 @@ export default function HomeScreen() {
         onPress={() => {
           Alert.alert(
             'How to Use ResQ',
-            '1. Select Incident Type\n2. Toggle Safe to Call\n3. Press SEND ALERT or triple tap anywhere.\n4. Authorities are notified immediately.'
+            '1. Select Incident Type\n2. Toggle Safe to Call\n3. Press SEND ALERT three times quickly.\n4. Authorities are notified immediately.'
           );
         }}
       >
@@ -81,7 +99,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#110e0eff', // dark background for focus
+    backgroundColor: '#110e0eff',
     padding: 16,
     justifyContent: 'flex-start',
   },
@@ -116,20 +134,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   fullWidthButton: {
-  width: '100%',
-  aspectRatio: 6 / 1, // adjusts height to keep it visually balanced
-},
+    width: '100%',
+    aspectRatio: 6 / 1,
+  },
   toggleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: -100,
-    paddingHorizontal: 4,
-  },
-  toggleLabel: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
+    justifyContent: 'center',
+    gap: 12,
+    marginTop: 20,
   },
   panicButton: {
     marginTop: 40,
