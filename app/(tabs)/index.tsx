@@ -1,76 +1,148 @@
-import { Image } from 'expo-image';
-import {StyleSheet } from 'react-native';
-
-// import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Switch, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons'; // for icons
 export default function HomeScreen() {
+  const [safeToCall, setSafeToCall] = useState(false);
+  const [selectedIncident, setSelectedIncident] = useState<string | null>(null);
+
+  const incidentTypes = [
+    { id: 'violence', icon: 'alert-circle', label: 'Violence' },
+    { id: 'accident', icon: 'car', label: 'Accident' },
+    { id: 'fire', icon: 'flame', label: 'Fire' },
+    { id: 'disaster', icon: 'earth', label: 'Disaster' },
+  ];
+
+  const triggerAlert = () => {
+    if (!selectedIncident) {
+      Alert.alert('Select Incident Type', 'Please choose the type of incident before triggering.');
+      return;
+    }
+    Alert.alert('Alert Triggered', `Type: ${selectedIncident}, Safe to call: ${safeToCall}`);
+    // integrate your backend alert logic here
+  };
+
   return (
-   <ParallaxScrollView
-  headerBackgroundColor={{ light: '#ffffffff', dark: '#000000ff' }}
-  headerImage={
-    <Image
-      source={require('@/assets/images/resq.jpg')}
-      style={styles.reactLogo}
-    />
-  }>
-  
-  <ThemedView style={styles.titleContainer}>
-    <ThemedText type="title">ResQ - Quick Emergency Response</ThemedText>
-  </ThemedView>
+    <View style={styles.container}>
+      
+      {/* Incident Type */}
+      <Text style={styles.sectionTitle}>Select Incident Type</Text>
+      <View style={styles.incidentGrid}>
+        {incidentTypes.map(type => (
+          <TouchableOpacity
+            key={type.id}
+            style={[
+              styles.incidentButton,
+              selectedIncident === type.id && styles.incidentSelected
+            ]}
+            onPress={() => setSelectedIncident(type.id)}
+          >
+            <Ionicons name={type.icon as any} size={32} color="#fff" />
+            <Text style={styles.incidentLabel}>{type.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-  <ThemedView style={styles.stepContainer}>
-    <ThemedText type="subtitle">1. Trigger Alert</ThemedText>
-    <ThemedText>Triple-tap discreetly to start an emergency alert.</ThemedText>
-  </ThemedView>
+      {/* Safe to Call Toggle */}
+      <View style={styles.toggleContainer}>
+        <Text style={styles.toggleLabel}>Safe to Call</Text>
+        <Switch
+          value={safeToCall}
+          onValueChange={setSafeToCall}
+          trackColor={{ false: '#ff4d4d', true: '#4CAF50' }}
+          thumbColor="#fff"
+        />
+      </View>
 
-  <ThemedView style={styles.stepContainer}>
-    <ThemedText type="subtitle">2. Share Details</ThemedText>
-    <ThemedText>App collects emergency type, GPS location, and contact info.</ThemedText>
-  </ThemedView>
+      {/* Main Panic Trigger */}
+      <TouchableOpacity style={styles.panicButton} onPress={triggerAlert}>
+        <Text style={styles.panicButtonText}>SEND ALERT</Text>
+      </TouchableOpacity>
 
-  <ThemedView style={styles.stepContainer}>
-    <ThemedText type="subtitle">3. Confirm Safety</ThemedText>
-    <ThemedText>Select if you’re safe for a callback.</ThemedText>
-  </ThemedView>
-
-  <ThemedView style={styles.stepContainer}>
-    <ThemedText type="subtitle">4. Send to Authorities</ThemedText>
-    <ThemedText>Alert sent with incident ID, secure link, and location.</ThemedText>
-  </ThemedView>
-
-  <ThemedView style={styles.stepContainer}>
-    <ThemedText type="subtitle">5. Optional Evidence</ThemedText>
-    <ThemedText>Upload photos/videos linked to your incident dashboard.</ThemedText>
-  </ThemedView>
-
-  <ThemedView style={styles.stepContainer}>
-    <ThemedText type="subtitle">6. Track Status</ThemedText>
-    <ThemedText>Authorities update case progress: Received → In Progress → Resolved.</ThemedText>
-  </ThemedView>
-
-</ParallaxScrollView>
-
+      {/* Info Button */}
+      <TouchableOpacity
+        style={styles.infoButton}
+        onPress={() => {
+          Alert.alert(
+            'How to Use ResQ',
+            '1. Select Incident Type\n2. Toggle Safe to Call\n3. Press SEND ALERT or triple tap anywhere.\n4. Authorities are notified immediately.'
+          );
+        }}
+      >
+        <Ionicons name="information-circle-outline" size={28} color="#888" />
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#110e0eff', // dark background for focus
+    padding: 16,
+    justifyContent: 'flex-start',
+  },
+  sectionTitle: {
+    color: '#fff',
+    fontSize: 20,
+    marginTop: 30,
+    marginBottom: 10,
+    fontWeight: '600',
+  },
+  incidentGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
+  incidentButton: {
+    width: '48%',
+    aspectRatio: 1,
+    backgroundColor: '#444',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  incidentSelected: {
+    backgroundColor: '#d9534f',
+  },
+  incidentLabel: {
+    color: '#fff',
+    marginTop: 6,
+    fontSize: 16,
+  },
+  toggleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    justifyContent: 'space-between',
+    marginTop: -100,
+    paddingHorizontal: 4,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  toggleLabel: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '600',
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 5,
-    left: 55,
+  panicButton: {
+    marginTop: 40,
+    backgroundColor: '#ff1a1a',
+    borderRadius: 100,
+    alignSelf: 'center',
+    paddingVertical: 30,
+    paddingHorizontal: 50,
+    shadowColor: '#ff1a1a',
+    shadowOpacity: 0.8,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  panicButtonText: {
+    color: '#fff',
+    fontSize: 22,
+    fontWeight: 'bold',
+  },
+  infoButton: {
     position: 'absolute',
+    bottom: 20,
+    right: 20,
   },
 });
