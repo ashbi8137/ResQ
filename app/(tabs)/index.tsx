@@ -1,27 +1,59 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Switch, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useState } from 'react';
+import { Alert, Platform, StyleSheet, Switch, Text, TouchableOpacity, Vibration, View } from 'react-native';
+import MediaUpload from '../../components/MediaUpload';
+import { EmergencyService } from '../../lib/emergencyService';
 
 export default function HomeScreen() {
   const [safeToCall, setSafeToCall] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState<string | null>(null);
   const [pressCount, setPressCount] = useState(0);
+  const [currentIncidentId, setCurrentIncidentId] = useState<string | null>(null);
+  const [phoneNumber, setPhoneNumber] = useState('+1234567890'); // Default for demo
+  const [isLoading, setIsLoading] = useState(false);
 
   const incidentTypes = [
-    { id: 'violence', icon: 'alert-circle', label: 'Violence' },
+    { id: 'domestic_violence', icon: 'alert-circle', label: 'Violence' },
     { id: 'accident', icon: 'car', label: 'Accident' },
-    { id: 'fire', icon: 'flame', label: 'Fire' },
-    { id: 'disaster', icon: 'earth', label: 'Disaster' },
+    { id: 'disaster', icon: 'flame', label: 'Fire' },
+    { id: 'medical', icon: 'earth', label: 'Disaster' },
     { id: 'other', icon: 'ellipsis-horizontal', label: 'Other' },
   ];
 
-  const triggerAlert = () => {
+  const triggerAlert = async () => {
     if (!selectedIncident) {
       Alert.alert('Select Incident Type', 'Please choose the type of incident before triggering.');
       return;
     }
-    Alert.alert('🚨 Alert Triggered', `Type: ${selectedIncident}, Safe to call: ${safeToCall}`);
-    // your backend alert logic here
+
+    setIsLoading(true);
+    try {
+      const result = await EmergencyService.createEmergencyAlert(
+        phoneNumber,
+        selectedIncident as any,
+        safeToCall
+      );
+
+             if (result.success && result.incidentId) {
+         setCurrentIncidentId(result.incidentId);
+         // Vibration only works on mobile devices
+         if (Platform.OS !== 'web') {
+           Vibration.vibrate([0, 500, 200, 500]); // Success vibration pattern
+         }
+         Alert.alert(
+           '🚨 Alert Triggered Successfully', 
+           `Type: ${selectedIncident}\nSafe to call: ${safeToCall ? 'Yes' : 'No'}\nIncident ID: ${result.incidentId}`
+         );
+         setPressCount(0); // reset after triggering
+       } else {
+        Alert.alert('Error', result.error || 'Failed to send alert');
+      }
+    } catch (error) {
+      console.error('Error triggering alert:', error);
+      Alert.alert('Error', 'Failed to send emergency alert');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handlePanicPress = () => {
@@ -32,6 +64,10 @@ export default function HomeScreen() {
       triggerAlert();
       setPressCount(0); // reset after triggering
     }
+  };
+
+  const handleMediaUploadComplete = () => {
+    Alert.alert('Success', 'Evidence uploaded successfully!');
   };
 
   return (
@@ -76,9 +112,28 @@ export default function HomeScreen() {
       </View>
 
       {/* Main Panic Trigger */}
-      <TouchableOpacity style={styles.panicButton} onPress={handlePanicPress}>
-        <Text style={styles.panicButtonText}>SEND ALERT</Text>
-      </TouchableOpacity>
+             <TouchableOpacity 
+         style={[styles.panicButton, isLoading && styles.panicButtonLoading]} 
+         onPress={handlePanicPress}
+         disabled={isLoading}
+       >
+         <Text style={styles.panicButtonText}>
+           {isLoading ? 'SENDING...' : 'SEND ALERT'}
+         </Text>
+         {pressCount > 0 && !isLoading && (
+           <Text style={styles.tapCountText}>{pressCount}/3</Text>
+         )}
+       </TouchableOpacity>
+
+      {/* Media Upload Section */}
+      {currentIncidentId && (
+        <View style={styles.mediaSection}>
+          <MediaUpload 
+            incidentId={currentIncidentId}
+            onUploadComplete={handleMediaUploadComplete}
+          />
+        </View>
+      )}
 
       {/* Info Button */}
       <TouchableOpacity
@@ -86,7 +141,7 @@ export default function HomeScreen() {
         onPress={() => {
           Alert.alert(
             'How to Use ResQ',
-            '1. Select Incident Type\n2. Toggle Safe to Call\n3. Press SEND ALERT three times quickly.\n4. Authorities are notified immediately.'
+            '1. Select Incident Type\n2. Toggle Safe to Call\n3. Press SEND ALERT three times quickly.\n4. Authorities are notified immediately with your location.\n5. Upload evidence if needed.'
           );
         }}
       >
@@ -156,10 +211,25 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     elevation: 10,
   },
+  panicButtonLoading: {
+    backgroundColor: '#ff6666',
+  },
   panicButtonText: {
     color: '#fff',
     fontSize: 22,
     fontWeight: 'bold',
+  },
+  tapCountText: {
+    color: '#fff',
+    fontSize: 14,
+    marginTop: 5,
+    opacity: 0.8,
+  },
+  mediaSection: {
+    marginTop: 20,
+    backgroundColor: '#222',
+    borderRadius: 12,
+    padding: 16,
   },
   infoButton: {
     position: 'absolute',
