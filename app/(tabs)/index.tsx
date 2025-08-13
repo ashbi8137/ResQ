@@ -309,65 +309,36 @@ export default function HomeScreen() {
             )}
 
             {/* SOS Button */}
-            <View style={styles.sosContainer}>
-              {/* Ripple Effect */}
-              <Animated.View style={[
-                styles.rippleOuter,
-                {
-                  opacity: rippleAnim,
-                  transform: [{
-                    scale: rippleAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [1, 1.5]
-                    })
-                  }]
-                }
-              ]} />
-              <Animated.View style={[
-                styles.rippleInner,
-                {
-                  opacity: rippleAnim.interpolate({
-                    inputRange: [0, 0.5, 1],
-                    outputRange: [0, 0.3, 0]
-                  }),
-                  transform: [{
-                    scale: rippleAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: [1, 1.3]
-                    })
-                  }]
-                }
-              ]} />
+<View style={styles.sosContainer}>
+  <Animated.View style={[styles.pulseWrapper, { transform: [{ scale: pulseAnim }] }]}>
+    <TouchableOpacity
+      style={[
+        styles.sosButton,
+        isLoading ? styles.sosButtonLoading : selectedIncident && styles.sosButtonReady
+      ]}
+      onPress={handlePanicPress}
+      disabled={isLoading}
+      activeOpacity={0.85}
+    >
+      <View style={styles.sosButtonInner}>
+        {isLoading ? (
+          <>
+            <Ionicons name="hourglass" size={40} color="#fff" />
+            <Text style={styles.sosButtonText}>SENDING</Text>
+            <Text style={styles.sosButtonSubtext}>Please wait...</Text>
+          </>
+        ) : (
+          <>
+            <Ionicons name="warning" size={40} color="#fff" />
+            <Text style={styles.sosButtonText}>SOS</Text>
+            <Text style={styles.sosButtonSubtext}>Emergency</Text>
+          </>
+        )}
+      </View>
+    </TouchableOpacity>
+  </Animated.View>
+</View>
 
-              <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-                <TouchableOpacity
-                  style={[
-                    styles.sosButton,
-                    selectedIncident && styles.sosButtonReady,
-                    isLoading && styles.sosButtonLoading
-                  ]}
-                  onPress={handlePanicPress}
-                  disabled={isLoading}
-                  activeOpacity={0.8}
-                >
-                  <View style={styles.sosButtonInner}>
-                    {isLoading ? (
-                      <>
-                        <Ionicons name="hourglass" size={36} color="#ffffff" />
-                        <Text style={styles.sosButtonText}>SENDING</Text>
-                        <Text style={styles.sosButtonSubtext}>Please wait...</Text>
-                      </>
-                    ) : (
-                      <>
-                        <Ionicons name="warning" size={36} color="#ffffff" />
-                        <Text style={styles.sosButtonText}>SOS</Text>
-                        <Text style={styles.sosButtonSubtext}>Emergency</Text>
-                      </>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              </Animated.View>
-            </View>
 
             {/* Selected Emergency Type Display */}
             {selectedType && (
