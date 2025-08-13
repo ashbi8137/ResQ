@@ -142,6 +142,7 @@ export default function HomeScreen() {
           `Alert Type: ${selectedTypeLabel}\nCommunication: ${safeToCall ? 'Voice call enabled' : 'Silent mode'}\nIncident ID: ${result.incidentId}\n\nAuthorities have been notified of your location.`,
           [{ text: 'OK', style: 'default' }]
         );
+        
         setPressCount(0);
       } else {
         Alert.alert(
@@ -214,7 +215,10 @@ export default function HomeScreen() {
 
   // Get selected incident type
   const selectedType = incidentTypes.find(type => type.id === selectedIncident);
-
+  const handleCloseCase = () => {
+    setCurrentIncidentId(null);
+    setShowMediaUpload(false);
+  };
   return (
     <View style={styles.container}>
       {/* Enhanced Header */}
@@ -370,9 +374,10 @@ export default function HomeScreen() {
             <View style={styles.emergencyHeader}>
               <Text style={styles.emergencyTitle}>Emergency Alert</Text>
               <Text style={styles.emergencySubtitle}>
-                {pressCount === 0
-                  ? 'Triple-tap the SOS button to send emergency alert'
-                  : `${3 - pressCount} more tap${3 - pressCount !== 1 ? 's' : ''} required`}
+              {pressCount === 0
+  ? 'Triple-tap the SOS button to send emergency alert'
+  : `${3 - pressCount} more tap${3 - pressCount !== 1 ? 's' : ''} required`}
+
               </Text>
             </View>
 
@@ -380,10 +385,13 @@ export default function HomeScreen() {
             {pressCount > 0 && (
               <View style={styles.progressContainer}>
                 <View style={styles.progressBar}>
-                  <Animated.View style={[
-                    styles.progressFill,
-                    { width: `${(pressCount / 3) * 100}%` }
-                  ]} />
+                <Animated.View
+  style={[
+    styles.progressFill,
+    { width: `${(pressCount / 3) * 100}%` }
+  ]}
+/>
+
                 </View>
                 <Text style={styles.progressText}>{pressCount}/3</Text>
               </View>
@@ -440,32 +448,50 @@ export default function HomeScreen() {
               </View>
             )}
           </View>
+{/* Media Upload Section */}
+{showMediaUpload && currentIncidentId && (
+  <View style={styles.sectionCard}>
+    <View style={styles.sectionHeader}>
+      <View style={styles.sectionIconContainer}>
+        <Ionicons name="cloud-upload" size={24} color="#7C3AED" />
+      </View>
+      <View style={styles.sectionTitleContainer}>
+        <Text style={styles.sectionTitle}>Evidence Upload</Text>
+        <Text style={styles.sectionSubtitle}>Attach photos, videos, or audio</Text>
+      </View>
+    </View>
 
-          {/* Media Upload Section */}
-          {showMediaUpload && currentIncidentId && (
-            <View style={styles.sectionCard}>
-              <View style={styles.sectionHeader}>
-                <View style={styles.sectionIconContainer}>
-                  <Ionicons name="cloud-upload" size={24} color="#7C3AED" />
-                </View>
-                <View style={styles.sectionTitleContainer}>
-                  <Text style={styles.sectionTitle}>Evidence Upload</Text>
-                  <Text style={styles.sectionSubtitle}>Attach photos, videos, or audio</Text>
-                </View>
-              </View>
-              <Suspense fallback={
-                <View style={styles.uploadLoader}>
-                  <Ionicons name="hourglass" size={24} color="#6B7280" />
-                  <Text style={styles.uploadLoaderText}>Loading uploader...</Text>
-                </View>
-              }>
-                <MediaUpload
-                  incidentId={currentIncidentId}
-                  onUploadComplete={handleMediaUploadComplete}
-                />
-              </Suspense>
-            </View>
-          )}
+    <Suspense fallback={
+      <View style={styles.uploadLoader}>
+        <Ionicons name="hourglass" size={24} color="#6B7280" />
+        <Text style={styles.uploadLoaderText}>Loading uploader...</Text>
+      </View>
+    }>
+      <MediaUpload
+        incidentId={currentIncidentId}
+        onUploadComplete={handleMediaUploadComplete}
+      />
+    </Suspense>
+
+    {/* Close Case Button */}
+    <TouchableOpacity
+      style={{
+        backgroundColor: '#DC2626',
+        padding: 14,
+        borderRadius: 10,
+        alignItems: 'center',
+        marginTop: 16,
+      }}
+      onPress={handleCloseCase}
+      
+    >
+      <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
+        Close Case
+      </Text>
+    </TouchableOpacity>
+  </View>
+)}
+
 
           {/* Safety Tips */}
           <View style={styles.tipsCard}>
