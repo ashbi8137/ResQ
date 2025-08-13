@@ -1,36 +1,92 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Alert, Platform, StyleSheet, Switch, Text, TouchableOpacity, Vibration, View, ScrollView, Animated } from 'react-native';
+import { 
+  Alert, 
+  Platform, 
+  StyleSheet, 
+  Switch, 
+  Text, 
+  TouchableOpacity, 
+  Vibration, 
+  View, 
+  ScrollView, 
+  Animated 
+} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// import * as Speech from 'expo-speech';
 import { EmergencyService } from '../../lib/emergencyService';
 
 const MediaUpload = React.lazy(() => import('../../components/MediaUpload'));
 
 export default function HomeScreen() {
+  // State Management
   const [safeToCall, setSafeToCall] = useState(false);
-  const [selectedIncident, setSelectedIncident] = useState<string | null>(null);
+  const [selectedIncident, setSelectedIncident] = useState(null);
   const [pressCount, setPressCount] = useState(0);
-  const [currentIncidentId, setCurrentIncidentId] = useState<string | null>(null);
+  const [currentIncidentId, setCurrentIncidentId] = useState(null);
   const [phoneNumber] = useState('+1234567890');
   const [isLoading, setIsLoading] = useState(false);
   const [showMediaUpload, setShowMediaUpload] = useState(false);
+  
+  // Animation References
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const rippleAnim = useRef(new Animated.Value(0)).current;
 
+  // Emergency Types Configuration
   const incidentTypes = [
-    { id: 'domestic_violence', icon: 'shield-outline', label: 'Domestic Violence', color: '#DC2626', bgColor: '#FEF2F2', gradient: ['#FEF2F2', '#FEE2E2'] },
-    { id: 'accident', icon: 'car-outline', label: 'Vehicle Accident', color: '#D97706', bgColor: '#FFFBEB', gradient: ['#FFFBEB', '#FEF3C7'] },
-    { id: 'disaster', icon: 'flame-outline', label: 'Fire/Disaster', color: '#EA580C', bgColor: '#FFF7ED', gradient: ['#FFF7ED', '#FFEDD5'] },
-    { id: 'medical', icon: 'medical-outline', label: 'Medical Emergency', color: '#059669', bgColor: '#F0FDF4', gradient: ['#F0FDF4', '#DCFCE7'] },
-    { id: 'other', icon: 'help-circle-outline', label: 'Other Emergency', color: '#7C3AED', bgColor: '#FAF5FF', gradient: ['#FAF5FF', '#F3E8FF'] },
+    { 
+      id: 'domestic_violence', 
+      icon: 'shield-outline', 
+      label: 'Domestic Violence', 
+      color: '#DC2626', 
+      bgColor: '#FEF2F2', 
+      gradient: ['#FEF2F2', '#FEE2E2'] 
+    },
+    { 
+      id: 'accident', 
+      icon: 'car-outline', 
+      label: 'Vehicle Accident', 
+      color: '#D97706', 
+      bgColor: '#FFFBEB', 
+      gradient: ['#FFFBEB', '#FEF3C7'] 
+    },
+    { 
+      id: 'disaster', 
+      icon: 'flame-outline', 
+      label: 'Fire/Disaster', 
+      color: '#EA580C', 
+      bgColor: '#FFF7ED', 
+      gradient: ['#FFF7ED', '#FFEDD5'] 
+    },
+    { 
+      id: 'medical', 
+      icon: 'medical-outline', 
+      label: 'Medical Emergency', 
+      color: '#059669', 
+      bgColor: '#F0FDF4', 
+      gradient: ['#F0FDF4', '#DCFCE7'] 
+    },
+    { 
+      id: 'other', 
+      icon: 'help-circle-outline', 
+      label: 'Other Emergency', 
+      color: '#7C3AED', 
+      bgColor: '#FAF5FF', 
+      gradient: ['#FAF5FF', '#F3E8FF'] 
+    },
   ];
 
+  // Initialize Component
   useEffect(() => {
-    (async () => {
-      const lastIncident = await AsyncStorage.getItem('lastIncident');
-      if (lastIncident) setSelectedIncident(lastIncident);
-    })();
+    const initializeApp = async () => {
+      try {
+        const lastIncident = await AsyncStorage.getItem('lastIncident');
+        if (lastIncident) setSelectedIncident(lastIncident);
+      } catch (error) {
+        console.error('Error loading saved incident:', error);
+      }
+    };
+
+    initializeApp();
 
     // Start ripple animation
     const rippleAnimation = Animated.loop(
@@ -52,11 +108,15 @@ export default function HomeScreen() {
     return () => rippleAnimation.stop();
   }, []);
 
-  const triggerAlert = async (incidentOverride?: string) => {
+  // Emergency Alert Handler
+  const triggerAlert = async (incidentOverride) => {
     const finalIncident = incidentOverride || selectedIncident;
 
     if (!finalIncident) {
-      Alert.alert('⚠️ Missing Information', 'Please select an emergency type before triggering the alert.');
+      Alert.alert(
+        '⚠️ Missing Information', 
+        'Please select an emergency type before triggering the alert.'
+      );
       return;
     }
 
@@ -64,7 +124,7 @@ export default function HomeScreen() {
     try {
       const result = await EmergencyService.createEmergencyAlert(
         phoneNumber,
-        finalIncident as any,
+        finalIncident,
         safeToCall
       );
 
@@ -76,29 +136,41 @@ export default function HomeScreen() {
           Vibration.vibrate([0, 500, 200, 500]);
         }
 
+        const selectedTypeLabel = incidentTypes.find(t => t.id === finalIncident)?.label;
         Alert.alert(
           '🚨 Emergency Alert Sent',
-          `Alert Type: ${incidentTypes.find(t => t.id === finalIncident)?.label}\nCommunication: ${safeToCall ? 'Voice call enabled' : 'Silent mode'}\nIncident ID: ${result.incidentId}\n\nAuthorities have been notified of your location.`,
+          `Alert Type: ${selectedTypeLabel}\nCommunication: ${safeToCall ? 'Voice call enabled' : 'Silent mode'}\nIncident ID: ${result.incidentId}\n\nAuthorities have been notified of your location.`,
           [{ text: 'OK', style: 'default' }]
         );
         setPressCount(0);
       } else {
-        Alert.alert('❌ Alert Failed', result.error || 'Unable to send emergency alert. Please try again.');
+        Alert.alert(
+          '❌ Alert Failed', 
+          result.error || 'Unable to send emergency alert. Please try again.'
+        );
       }
     } catch (error) {
       console.error('Error triggering alert:', error);
-      Alert.alert('❌ Connection Error', 'Failed to send emergency alert. Check your connection and try again.');
+      Alert.alert(
+        '❌ Connection Error', 
+        'Failed to send emergency alert. Check your connection and try again.'
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleIncidentSelect = async (id: string) => {
+  // Incident Selection Handler
+  const handleIncidentSelect = async (id) => {
     setSelectedIncident(id);
-    await AsyncStorage.setItem('lastIncident', id);
-    // Speech.speak(`${incidentTypes.find(type => type.id === id)?.label} selected`);
+    try {
+      await AsyncStorage.setItem('lastIncident', id);
+    } catch (error) {
+      console.error('Error saving incident selection:', error);
+    }
   };
 
+  // Panic Button Handler
   const handlePanicPress = () => {
     const newCount = pressCount + 1;
     setPressCount(newCount);
@@ -107,25 +179,40 @@ export default function HomeScreen() {
       Vibration.vibrate(100);
     }
 
+    // Button press animation
     pulseAnim.setValue(1);
     Animated.sequence([
-      Animated.timing(pulseAnim, { toValue: 1.2, duration: 100, useNativeDriver: true }),
-      Animated.timing(pulseAnim, { toValue: 1, duration: 100, useNativeDriver: true })
+      Animated.timing(pulseAnim, { 
+        toValue: 1.2, 
+        duration: 100, 
+        useNativeDriver: true 
+      }),
+      Animated.timing(pulseAnim, { 
+        toValue: 1, 
+        duration: 100, 
+        useNativeDriver: true 
+      })
     ]).start();
 
     if (newCount === 3) {
       triggerAlert(selectedIncident || 'other');
     } else {
+      // Reset count after 3 seconds if not completed
       setTimeout(() => {
         setPressCount(0);
       }, 3000);
     }
   };
 
+  // Media Upload Complete Handler
   const handleMediaUploadComplete = () => {
-    Alert.alert('✅ Upload Successful', 'Evidence has been uploaded and attached to your emergency report.');
+    Alert.alert(
+      '✅ Upload Successful', 
+      'Evidence has been uploaded and attached to your emergency report.'
+    );
   };
 
+  // Get selected incident type
   const selectedType = incidentTypes.find(type => type.id === selectedIncident);
 
   return (
@@ -143,37 +230,14 @@ export default function HomeScreen() {
               <Ionicons name="shield-checkmark" size={28} color="#ffffff" />
             </View>
           </View>
-          <Text style={styles.headerTitle}>ResQ Emergency</Text>
+          <Text style={styles.headerTitle}>ResQ</Text>
           <Text style={styles.headerSubtitle}>Immediate Response System</Text>
         </View>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
-          {/* Quick Status Card */}
-          <View style={styles.statusCard}>
-            <View style={styles.statusCardHeader}>
-              <View style={styles.statusCardIcon}>
-                <Ionicons name="checkmark-circle" size={20} color="#059669" />
-              </View>
-              <Text style={styles.statusCardTitle}>System Status</Text>
-            </View>
-            <View style={styles.statusGrid}>
-              <View style={styles.statusItem}>
-                <Text style={styles.statusValue}>GPS</Text>
-                <Text style={styles.statusLabel}>Active</Text>
-              </View>
-              <View style={styles.statusItem}>
-                <Text style={styles.statusValue}>Network</Text>
-                <Text style={styles.statusLabel}>Connected</Text>
-              </View>
-              <View style={styles.statusItem}>
-                <Text style={styles.statusValue}>Services</Text>
-                <Text style={styles.statusLabel}>Available</Text>
-              </View>
-            </View>
-          </View>
-
+          
           {/* Emergency Type Selection */}
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
@@ -186,102 +250,119 @@ export default function HomeScreen() {
               </View>
             </View>
 
-            <View style={styles.incidentGrid}>
-              {incidentTypes.map((type) => {
-                const isSelected = selectedIncident === type.id;
-                return (
-                  <TouchableOpacity
-                    key={type.id}
-                    style={[
-                      styles.incidentCard,
-                      isSelected && styles.incidentCardSelected,
-                      { borderColor: isSelected ? type.color : '#E5E7EB' }
-                    ]}
-                    onPress={() => handleIncidentSelect(type.id)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={[
-                      styles.incidentIconContainer,
-                      { backgroundColor: isSelected ? type.color : type.bgColor }
-                    ]}>
-                      <Ionicons
-                        name={type.icon as any}
-                        size={28}
-                        color={isSelected ? '#ffffff' : type.color}
-                      />
-                    </View>
-                    <Text style={[
-                      styles.incidentLabel,
-                      { color: isSelected ? type.color : '#374151' }
-                    ]}>
-                      {type.label}
-                    </Text>
-                    {isSelected && (
-                      <View style={styles.selectedIndicator}>
-                        <Ionicons name="checkmark-circle" size={16} color={type.color} />
+            <View style={styles.incidentGridContainer}>
+              {/* First row - 3 items */}
+              <View style={styles.incidentRow}>
+                {incidentTypes.slice(0, 3).map((type) => {
+                  const isSelected = selectedIncident === type.id;
+                  return (
+                    <TouchableOpacity
+                      key={type.id}
+                      style={[
+                        styles.incidentCard,
+                        styles.incidentCardThreeColumn,
+                        isSelected && styles.incidentCardSelected,
+                        { borderColor: isSelected ? type.color : '#E5E7EB' }
+                      ]}
+                      onPress={() => handleIncidentSelect(type.id)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[
+                        styles.incidentIconContainer,
+                        { backgroundColor: isSelected ? type.color : type.bgColor }
+                      ]}>
+                        <Ionicons
+                          name={type.icon}
+                          size={28}
+                          color={isSelected ? '#ffffff' : type.color}
+                        />
                       </View>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
+                      <Text style={[
+                        styles.incidentLabel,
+                        { color: isSelected ? type.color : '#374151' }
+                      ]}>
+                        {type.label}
+                      </Text>
+                      {isSelected && (
+                        <View style={styles.selectedIndicator}>
+                          <Ionicons name="checkmark-circle" size={16} color={type.color} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* Second row - 2 items */}
+              <View style={styles.incidentRow}>
+                {incidentTypes.slice(3, 5).map((type) => {
+                  const isSelected = selectedIncident === type.id;
+                  return (
+                    <TouchableOpacity
+                      key={type.id}
+                      style={[
+                        styles.incidentCard,
+                        styles.incidentCardTwoColumn,
+                        isSelected && styles.incidentCardSelected,
+                        { borderColor: isSelected ? type.color : '#E5E7EB' }
+                      ]}
+                      onPress={() => handleIncidentSelect(type.id)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={[
+                        styles.incidentIconContainer,
+                        { backgroundColor: isSelected ? type.color : type.bgColor }
+                      ]}>
+                        <Ionicons
+                          name={type.icon}
+                          size={28}
+                          color={isSelected ? '#ffffff' : type.color}
+                        />
+                      </View>
+                      <Text style={[
+                        styles.incidentLabel,
+                        { color: isSelected ? type.color : '#374151' }
+                      ]}>
+                        {type.label}
+                      </Text>
+                      {isSelected && (
+                        <View style={styles.selectedIndicator}>
+                          <Ionicons name="checkmark-circle" size={16} color={type.color} />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
           </View>
 
           {/* Communication Preferences */}
-          <View style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <View style={styles.sectionIconContainer}>
-                <Ionicons name="call" size={24} color="#3B82F6" />
-              </View>
-              <View style={styles.sectionTitleContainer}>
-                <Text style={styles.sectionTitle}>Communication Method</Text>
-                <Text style={styles.sectionSubtitle}>How emergency services should contact you</Text>
-              </View>
-            </View>
-
-            <View style={styles.communicationContainer}>
-              <View style={styles.communicationOption}>
-                <View style={[
-                  styles.communicationIcon,
-                  { backgroundColor: safeToCall ? '#DCFCE7' : '#FEF2F2' }
-                ]}>
-                  <Ionicons
-                    name={safeToCall ? 'call' : 'call-off'}
-                    size={24}
-                    color={safeToCall ? '#059669' : '#DC2626'}
-                  />
-                </View>
-                <View style={styles.communicationContent}>
-                  <Text style={styles.communicationTitle}>
-                    {safeToCall ? 'Voice Communication' : 'Silent Mode'}
-                  </Text>
-                  <Text style={styles.communicationDescription}>
-                    {safeToCall 
-                      ? 'Emergency services can call you directly' 
-                      : 'Text messages and data communication only'
-                    }
-                  </Text>
-                  <View style={[
-                    styles.communicationStatus,
-                    { backgroundColor: safeToCall ? '#DCFCE7' : '#FEF2F2' }
-                  ]}>
-                    <Text style={[
-                      styles.communicationStatusText,
-                      { color: safeToCall ? '#059669' : '#DC2626' }
-                    ]}>
-                      {safeToCall ? 'ENABLED' : 'DISABLED'}
-                    </Text>
-                  </View>
-                </View>
-                <Switch
-                  value={safeToCall}
-                  onValueChange={setSafeToCall}
-                  trackColor={{ false: '#FEE2E2', true: '#DCFCE7' }}
-                  thumbColor={safeToCall ? '#059669' : '#DC2626'}
-                  style={styles.communicationSwitch}
+          <View style={styles.communicationToggle}>
+            <View style={styles.toggleContent}>
+              <View style={styles.toggleIcon}>
+                <Ionicons
+                  name={safeToCall ? 'call' : 'chatbubble-ellipses'}
+                  size={20}
+                  color={safeToCall ? '#059669' : '#3B82F6'}
                 />
               </View>
+              <View style={styles.toggleText}>
+                <Text style={styles.toggleTitle}>
+                  {safeToCall ? 'Voice Calls OK' : 'Text Only Mode'}
+                </Text>
+                <Text style={styles.toggleSubtitle}>
+                  {safeToCall ? 'Safe to call' : 'Silent situation'}
+                </Text>
+              </View>
             </View>
+            <Switch
+              value={safeToCall}
+              onValueChange={setSafeToCall}
+              trackColor={{ false: '#E5E7EB', true: '#DCFCE7' }}
+              thumbColor={safeToCall ? '#059669' : '#6B7280'}
+              ios_backgroundColor="#E5E7EB"
+            />
           </View>
 
           {/* Emergency Alert Section */}
@@ -299,7 +380,7 @@ export default function HomeScreen() {
             {pressCount > 0 && (
               <View style={styles.progressContainer}>
                 <View style={styles.progressBar}>
-                  <View style={[
+                  <Animated.View style={[
                     styles.progressFill,
                     { width: `${(pressCount / 3) * 100}%` }
                   ]} />
@@ -308,7 +389,7 @@ export default function HomeScreen() {
               </View>
             )}
 
-            {/* SOS Button */}
+{/* SOS Button */}
 <View style={styles.sosContainer}>
   <Animated.View style={[styles.pulseWrapper, { transform: [{ scale: pulseAnim }] }]}>
     <TouchableOpacity
@@ -321,23 +402,23 @@ export default function HomeScreen() {
       activeOpacity={0.85}
     >
       <View style={styles.sosButtonInner}>
-        {isLoading ? (
-          <>
-            <Ionicons name="hourglass" size={40} color="#fff" />
-            <Text style={styles.sosButtonText}>SENDING</Text>
-            <Text style={styles.sosButtonSubtext}>Please wait...</Text>
-          </>
-        ) : (
-          <>
-            <Ionicons name="warning" size={40} color="#fff" />
-            <Text style={styles.sosButtonText}>SOS</Text>
-            <Text style={styles.sosButtonSubtext}>Emergency</Text>
-          </>
-        )}
+        <Ionicons
+          name={isLoading ? 'hourglass' : 'warning'}
+          size={40}
+          color="#fff"
+          style={styles.icon}
+        />
+        <Text style={styles.sosButtonText}>
+          {isLoading ? 'SENDING' : 'SOS'}
+        </Text>
+        <Text style={styles.sosButtonSubtext}>
+          {isLoading ? 'Please wait...' : 'Emergency'}
+        </Text>
       </View>
     </TouchableOpacity>
   </Animated.View>
 </View>
+
 
 
             {/* Selected Emergency Type Display */}
@@ -348,7 +429,7 @@ export default function HomeScreen() {
                   { backgroundColor: selectedType.bgColor }
                 ]}>
                   <Ionicons
-                    name={selectedType.icon as any}
+                    name={selectedType.icon}
                     size={20}
                     color={selectedType.color}
                   />
@@ -369,7 +450,7 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.sectionTitleContainer}>
                   <Text style={styles.sectionTitle}>Evidence Upload</Text>
-                  <Text style={styles.sectionSubtitle}>Attach photos, videos, or audio to your report</Text>
+                  <Text style={styles.sectionSubtitle}>Attach photos, videos, or audio</Text>
                 </View>
               </View>
               <Suspense fallback={
@@ -392,13 +473,26 @@ export default function HomeScreen() {
               <Ionicons name="bulb" size={20} color="#F59E0B" />
               <Text style={styles.tipsTitle}>Safety Reminder</Text>
             </View>
-            <Text style={styles.tipsText}>
-              • Ensure your location services are enabled{'\n'}
-              • Keep your phone charged when possible{'\n'}
-              • Only use this for genuine emergencies{'\n'}
-              • Stay calm and follow responder instructions
-            </Text>
+            <View style={styles.tipsContent}>
+              <View style={styles.tipItem}>
+                <View style={styles.tipBullet} />
+                <Text style={styles.tipText}>Ensure your location services are enabled</Text>
+              </View>
+              <View style={styles.tipItem}>
+                <View style={styles.tipBullet} />
+                <Text style={styles.tipText}>Keep your phone charged when possible</Text>
+              </View>
+              <View style={styles.tipItem}>
+                <View style={styles.tipBullet} />
+                <Text style={styles.tipText}>Only use this for genuine emergencies</Text>
+              </View>
+              <View style={styles.tipItem}>
+                <View style={styles.tipBullet} />
+                <Text style={styles.tipText}>Stay calm and follow responder instructions</Text>
+              </View>
+            </View>
           </View>
+
         </View>
       </ScrollView>
     </View>
@@ -406,10 +500,22 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Container & Layout
   container: {
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
+  
+  scrollView: {
+    flex: 1,
+  },
+  
+  content: {
+    padding: 20,
+    paddingBottom: 100,
+  },
+
+  // Header Styles
   header: {
     position: 'relative',
     backgroundColor: '#0F172A',
@@ -424,19 +530,22 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     elevation: 12,
   },
+  
   headerBackground: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'linear-gradient(135deg, #0F172A 0%, #1E293B 100%)',
+    backgroundColor: '#0F172A',
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
   },
+  
   headerContent: {
     alignItems: 'center',
   },
+  
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -444,6 +553,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 20,
   },
+  
   statusIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -454,6 +564,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(16, 185, 129, 0.2)',
   },
+  
   statusDot: {
     width: 8,
     height: 8,
@@ -461,11 +572,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981',
     marginRight: 8,
   },
+  
   statusText: {
     color: '#10B981',
     fontSize: 12,
     fontWeight: '600',
   },
+  
   headerIconContainer: {
     width: 56,
     height: 56,
@@ -476,76 +589,22 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
+  
   headerTitle: {
     color: '#ffffff',
     fontSize: 28,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
+  
   headerSubtitle: {
     color: '#94A3B8',
     fontSize: 16,
     fontWeight: '500',
     marginTop: 4,
   },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    padding: 20,
-    paddingBottom: 100,
-  },
-  statusCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 16,
-    elevation: 4,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  statusCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  statusCardIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#ECFDF5',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  statusCardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  statusGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  statusItem: {
-    alignItems: 'center',
-    flex: 1,
-  },
-  statusValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#059669',
-    marginBottom: 4,
-  },
-  statusLabel: {
-    fontSize: 12,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
+
+  // Section Card Styles
   sectionCard: {
     backgroundColor: '#ffffff',
     borderRadius: 24,
@@ -559,11 +618,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
+  
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 24,
   },
+  
   sectionIconContainer: {
     width: 48,
     height: 48,
@@ -573,32 +634,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
+  
   sectionTitleContainer: {
     flex: 1,
   },
+  
   sectionTitle: {
     fontSize: 20,
     fontWeight: '800',
     color: '#1F2937',
     marginBottom: 4,
   },
+  
   sectionSubtitle: {
     fontSize: 14,
     color: '#6B7280',
     lineHeight: 20,
   },
-  incidentGrid: {
-    gap: 16,
+
+  // Incident Grid Styles
+  incidentGridContainer: {
+    marginTop: 16,
   },
-  incidentCard: {
+  
+  incidentRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  
+  incidentCard: {
     backgroundColor: '#F9FAFB',
     borderRadius: 16,
     padding: 20,
     borderWidth: 2,
     position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 120,
   },
+  
+  incidentCardThreeColumn: {
+    flex: 0.32,
+  },
+  
+  incidentCardTwoColumn: {
+    flex: 0.48,
+  },
+  
   incidentCardSelected: {
     backgroundColor: '#ffffff',
     shadowColor: '#000',
@@ -607,234 +690,287 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
+  
   incidentIconContainer: {
     width: 56,
     height: 56,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginBottom: 12,
   },
+  
   incidentLabel: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '700',
-    flex: 1,
+    textAlign: 'center',
+    lineHeight: 18,
   },
+  
   selectedIndicator: {
     position: 'absolute',
     top: 12,
     right: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
+    padding: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  communicationContainer: {
-    gap: 16,
-  },
-  communicationOption: {
+
+  // Communication Toggle Styles
+  communicationToggle: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#F9FAFB',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
-  communicationIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
+  
+  toggleContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 16,
-  },
-  communicationContent: {
     flex: 1,
   },
-  communicationTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
+  
+  toggleIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  communicationDescription: {
+  
+  toggleText: {
+    flex: 1,
+  },
+  
+  toggleTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 2,
+  },
+  
+  toggleSubtitle: {
     fontSize: 14,
     color: '#6B7280',
-    lineHeight: 20,
-    marginBottom: 8,
   },
-  communicationStatus: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  communicationStatusText: {
-    fontSize: 11,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  communicationSwitch: {
-    transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }],
-  },
+
+  // Emergency Section Styles
   emergencySection: {
-    alignItems: 'center',
-    marginVertical: 32,
-    paddingHorizontal: 20,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 6,
+    borderWidth: 1,
+    borderColor: '#f1f5f9',
   },
+  
   emergencyHeader: {
     alignItems: 'center',
     marginBottom: 24,
   },
+  
   emergencyTitle: {
     fontSize: 24,
-    fontWeight: '800',
-    color: '#1F2937',
+    fontWeight: '700',
+    color: '#1f2937',
     marginBottom: 8,
+    textAlign: 'center',
   },
+  
   emergencySubtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: '#6b7280',
     textAlign: 'center',
     lineHeight: 22,
   },
+
+  // Progress Indicator Styles
   progressContainer: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 24,
   },
+  
   progressBar: {
-    width: 200,
-    height: 6,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 3,
+    width: '100%',
+    height: 8,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 4,
     overflow: 'hidden',
     marginBottom: 8,
   },
+  
   progressFill: {
     height: '100%',
-    backgroundColor: '#DC2626',
-    borderRadius: 3,
+    backgroundColor: '#ef4444',
+    borderRadius: 4,
   },
+  
   progressText: {
     fontSize: 14,
-    fontWeight: '700',
-    color: '#DC2626',
+    fontWeight: '600',
+    color: '#ef4444',
   },
+
+  // SOS Button Styles
   sosContainer: {
-    position: 'relative',
     alignItems: 'center',
-    justifyContent: 'center',
     marginBottom: 24,
   },
-  rippleOuter: {
-    position: 'absolute',
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: '#DC2626',
-  },
-  rippleInner: {
-    position: 'absolute',
-    width: 200,
-    height: 200,
+  
+  pulseWrapper: {
     borderRadius: 100,
-    backgroundColor: '#EF4444',
   },
+  
   sosButton: {
     width: 160,
     height: 160,
     borderRadius: 80,
-    backgroundColor: '#DC2626',
+    backgroundColor: '#000000ff',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#DC2626',
+    shadowColor: '#ef4444',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
     elevation: 12,
-    borderWidth: 4,
-    borderColor: '#ffffff',
   },
+  
   sosButtonReady: {
-    backgroundColor: '#B91C1C',
-    shadowOpacity: 0.6,
+    backgroundColor: '#ca2020ff',
+    shadowColor: '#dc2626',
   },
+  
   sosButtonLoading: {
-    backgroundColor: '#6B7280',
-    shadowColor: '#6B7280',
+    backgroundColor: '#6b7280',
+    shadowColor: '#6b7280',
   },
+  
   sosButtonInner: {
     alignItems: 'center',
+    justifyContent: 'center',
   },
+  
+  iconContainer: {
+    marginBottom: 8,
+  },
+  
   sosButtonText: {
-    color: '#ffffff',
     fontSize: 24,
-    fontWeight: '900',
-    letterSpacing: 2,
-    marginTop: 8,
-  },
-  sosButtonSubtext: {
+    fontWeight: '800',
     color: '#ffffff',
-    fontSize: 12,
-    fontWeight: '600',
-    opacity: 0.9,
-    marginTop: 2,
+    marginBottom: 4,
   },
+  
+  sosButtonSubtext: {
+    fontSize: 14,
+    color: '#ffffff',
+    opacity: 0.9,
+  },
+
+
+
+  // Selected Type Display Styles
   selectedTypeDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    justifyContent: 'center',
+    backgroundColor: '#f8fafc',
+    borderRadius: 12,
+    padding: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: '#e2e8f0',
   },
+  
   selectedTypeIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
+  
   selectedTypeText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: '#374151',
   },
+
+  // Upload Loader Styles
   uploadLoader: {
     alignItems: 'center',
-    paddingVertical: 32,
+    padding: 32,
   },
+  
   uploadLoaderText: {
     fontSize: 14,
-    color: '#6B7280',
+    color: '#6b7280',
     marginTop: 8,
   },
+
+  // Safety Tips Styles
   tipsCard: {
-    backgroundColor: '#FFFBEB',
+    backgroundColor: '#fffbeb',
     borderRadius: 16,
     padding: 20,
     borderWidth: 1,
-    borderColor: '#FEF3C7',
+    borderColor: '#fbbf24',
   },
+  
   tipsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
+  
   tipsTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#92400E',
+    color: '#92400e',
     marginLeft: 8,
   },
-  tipsText: {
+  
+  tipsContent: {
+    gap: 12,
+  },
+  
+  tipItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  
+  tipBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#f59e0b',
+    marginTop: 6,
+    marginRight: 12,
+  },
+  
+  tipText: {
     fontSize: 14,
-    color: '#92400E',
+    color: '#92400e',
+    flex: 1,
     lineHeight: 20,
   },
 });
