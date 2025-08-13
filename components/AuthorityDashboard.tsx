@@ -8,7 +8,7 @@ export default function AuthorityDashboard() {
   const [alerts, setAlerts] = useState<EmergencyAlert[]>([])
   const [refreshing, setRefreshing] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'critical'>('all')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active'>('all')
 
   useEffect(() => {
     loadAlerts()
@@ -21,13 +21,8 @@ export default function AuthorityDashboard() {
     try {
       if (!refreshing) setLoading(true)
       const emergencyAlerts = await EmergencyService.getEmergencyAlerts()
-      // Sort by priority and creation time
+      // Sort by creation time - newest first
       const sortedAlerts = emergencyAlerts.sort((a, b) => {
-        const aPriority = getPriorityLevel(a.emergency_type, a.safe_to_call)
-        const bPriority = getPriorityLevel(b.emergency_type, b.safe_to_call)
-        const priorityOrder = { 'CRITICAL': 3, 'HIGH': 2, 'MEDIUM': 1 }
-        const priorityDiff = priorityOrder[bPriority] - priorityOrder[aPriority]
-        if (priorityDiff !== 0) return priorityDiff
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       })
       setAlerts(sortedAlerts)
@@ -104,22 +99,6 @@ export default function AuthorityDashboard() {
     }
   }
 
-  const getPriorityLevel = (type: EmergencyAlert['emergency_type'], safeToCall: boolean) => {
-    const highPriority = ['domestic_violence', 'medical'];
-    if (highPriority.includes(type) && !safeToCall) return 'CRITICAL';
-    if (highPriority.includes(type)) return 'HIGH';
-    return 'MEDIUM';
-  }
-
-  const getPriorityConfig = (priority: string) => {
-    switch (priority) {
-      case 'CRITICAL': return { color: '#DC2626', bg: '#FEE2E2', pulse: true }
-      case 'HIGH': return { color: '#EA580C', bg: '#FED7AA', pulse: false }
-      case 'MEDIUM': return { color: '#D97706', bg: '#FEF3C7', pulse: false }
-      default: return { color: '#6B7280', bg: '#F3F4F6', pulse: false }
-    }
-  }
-
   const getTimeDifference = (createdAt: string) => {
     const now = new Date()
     const created = new Date(createdAt)
@@ -157,26 +136,18 @@ export default function AuthorityDashboard() {
     switch (filterStatus) {
       case 'active':
         return alerts.filter(alert => alert.status !== 'resolved')
-      case 'critical':
-        return alerts.filter(alert => getPriorityLevel(alert.emergency_type, alert.safe_to_call) === 'CRITICAL')
       default:
         return alerts
     }
   }
 
   const renderAlert = ({ item }: { item: EmergencyAlert }) => {
-    const priority = getPriorityLevel(item.emergency_type, item.safe_to_call)
-    const priorityConfig = getPriorityConfig(priority)
     const statusConfig = getStatusColor(item.status)
     const typeConfig = getEmergencyTypeConfig(item.emergency_type)
     const timeAgo = getTimeDifference(item.created_at)
 
     return (
-      <View style={[
-        styles.alertCard, 
-        { borderLeftColor: priorityConfig.color },
-        priorityConfig.pulse && styles.criticalAlert
-      ]}>
+      <View style={[styles.alertCard, { borderLeftColor: typeConfig.color }]}>
         {/* Alert Header */}
         <View style={styles.alertHeader}>
           <View style={styles.alertMainInfo}>
@@ -193,12 +164,6 @@ export default function AuthorityDashboard() {
                 <Text style={styles.timeStamp}>{timeAgo}</Text>
               </View>
               <Text style={styles.emergencyType}>{typeConfig.label}</Text>
-            </View>
-          </View>
-          
-          <View style={styles.badgeSection}>
-            <View style={[styles.priorityBadge, { backgroundColor: priorityConfig.bg }]}>
-              <Text style={[styles.priorityText, { color: priorityConfig.color }]}>{priority}</Text>
             </View>
           </View>
         </View>
@@ -361,8 +326,8 @@ export default function AuthorityDashboard() {
 
   const filteredAlerts = getFilteredAlerts()
   const activeAlerts = alerts.filter(alert => alert.status !== 'resolved')
-  const criticalAlerts = alerts.filter(alert => getPriorityLevel(alert.emergency_type, alert.safe_to_call) === 'CRITICAL')
   const inProgressAlerts = alerts.filter(alert => alert.status === 'in_progress')
+  const resolvedAlerts = alerts.filter(alert => alert.status === 'resolved')
 
   return (
     <View style={styles.container}>
@@ -391,17 +356,14 @@ export default function AuthorityDashboard() {
             <Text style={styles.statLabel}>Active</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity 
-            style={[styles.statCard, filterStatus === 'critical' && styles.activeFilter]}
-            onPress={() => setFilterStatus(filterStatus === 'critical' ? 'all' : 'critical')}
-          >
-            <Text style={[styles.statNumber, { color: '#FEE2E2' }]}>{criticalAlerts.length}</Text>
-            <Text style={styles.statLabel}>Critical</Text>
-          </TouchableOpacity>
-          
           <View style={styles.statCard}>
             <Text style={[styles.statNumber, { color: '#FED7AA' }]}>{inProgressAlerts.length}</Text>
             <Text style={styles.statLabel}>In Progress</Text>
+          </View>
+          
+          <View style={styles.statCard}>
+            <Text style={[styles.statNumber, { color: '#D1FAE5' }]}>{resolvedAlerts.length}</Text>
+            <Text style={styles.statLabel}>Resolved</Text>
           </View>
           
           <TouchableOpacity 
@@ -434,13 +396,12 @@ export default function AuthorityDashboard() {
             <View style={styles.emptyCard}>
               <Ionicons name="checkmark-circle" size={64} color="#10B981" />
               <Text style={styles.emptyTitle}>
-                {filterStatus === 'critical' ? 'No Critical Alerts' : 
-                 filterStatus === 'active' ? 'No Active Alerts' : 'All Clear'}
+                {filterStatus === 'active' ? 'No Active Alerts' : 'All Clear'}
               </Text>
               <Text style={styles.emptyText}>
                 {filterStatus === 'all' 
                   ? 'No emergency alerts reported at this time'
-                  : `No ${filterStatus} alerts found`
+                  : 'No active alerts found'
                 }
               </Text>
               <TouchableOpacity 
