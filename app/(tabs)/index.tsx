@@ -353,7 +353,7 @@ export default function HomeScreen() {
               </View>
               <View style={styles.toggleText}>
                 <Text style={styles.toggleTitle}>
-                  {safeToCall ? 'Voice Calls OK' : 'Text Only Mode'}
+                  {safeToCall ? 'Safe to Call' : 'Text Only Mode'}
                 </Text>
                 <Text style={styles.toggleSubtitle}>
                   {safeToCall ? 'Safe to call' : 'Silent situation'}
@@ -545,8 +545,8 @@ const styles = StyleSheet.create({
   header: {
     position: 'relative',
     backgroundColor: '#0F172A',
-    paddingTop: Platform.OS === 'ios' ? 60 : 50,
-    paddingBottom: 32,
+    paddingTop: Platform.OS === 'ios' ? 40 : 20,
+    paddingBottom: 20,
     paddingHorizontal: 24,
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
