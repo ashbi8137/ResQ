@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons'
 import { useEffect, useState } from 'react'
-import { Alert, FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native'
+import { Alert, FlatList, Platform, RefreshControl, Image,StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { EmergencyAlert, EmergencyService } from '../lib/emergencyService'
+
 
 export default function AuthorityDashboard() {
   const [alerts, setAlerts] = useState<EmergencyAlert[]>([])
@@ -226,34 +227,58 @@ export default function AuthorityDashboard() {
           </View>
         </View>
 
-        {/* Safety Status */}
-        <View style={[
-          styles.safetyCard,
-          { backgroundColor: item.safe_to_call ? '#F0FDF4' : '#FEF2F2' }
-        ]}>
-          <Ionicons 
-            name={item.safe_to_call ? "checkmark-circle" : "warning"} 
-            size={18} 
-            color={item.safe_to_call ? "#059669" : "#DC2626"} 
+       {/* Safety Status */}
+<View style={[
+  styles.safetyCard,
+  { backgroundColor: item.safe_to_call ? '#F0FDF4' : '#FEF2F2' }
+]}>
+  <Ionicons 
+    name={item.safe_to_call ? "checkmark-circle" : "warning"} 
+    size={18} 
+    color={item.safe_to_call ? "#059669" : "#DC2626"} 
+  />
+  <Text style={[
+    styles.safetyText, 
+    { color: item.safe_to_call ? "#059669" : "#DC2626" }
+  ]}>
+    {item.safe_to_call 
+      ? 'Safe to contact via phone' 
+      : 'Silent response required - NOT safe to call'}
+  </Text>
+</View>
+{/* Uploaded Evidence */}
+{Array.isArray(item.media_urls) && item.media_urls.length > 0 && (
+  <View style={styles.evidenceContainer}>
+    <Text style={styles.evidenceTitle}>Uploaded Evidence</Text>
+    <FlatList
+      horizontal
+      data={item.media_urls}
+      keyExtractor={(uri, idx) => `${item.incident_id}-media-${idx}`}
+      showsHorizontalScrollIndicator={false}
+      renderItem={({ item: mediaUrl, index }) => (
+        <View style={styles.evidenceItem}>
+          <Image
+            source={{ uri: mediaUrl }}
+            style={styles.evidenceImage}
+            resizeMode="cover"
           />
-          <Text style={[
-            styles.safetyText, 
-            { color: item.safe_to_call ? "#059669" : "#DC2626" }
-          ]}>
-            {item.safe_to_call ? 'Safe to contact via phone' : 'Silent response required - NOT safe to call'}
-          </Text>
+          <Text style={styles.mediaIndex}>#{index + 1}</Text>
         </View>
+      )}
+    />
+  </View>
+)}
 
-        {/* Additional Notes */}
-        {item.notes && (
-          <View style={styles.notesCard}>
-            <View style={styles.notesHeader}>
-              <Ionicons name="document-text-outline" size={16} color="#6B7280" />
-              <Text style={styles.notesLabel}>Additional Information</Text>
-            </View>
-            <Text style={styles.notesText}>{item.notes}</Text>
-          </View>
-        )}
+      {/* Additional Notes */}
+{item.notes && (
+  <View style={styles.notesCard}>
+    <View style={styles.notesHeader}>
+      <Ionicons name="document-text-outline" size={16} color="#6B7280" />
+      <Text style={styles.notesLabel}>Additional Information</Text>
+    </View>
+    <Text style={styles.notesText}>{item.notes}</Text>
+  </View>
+)}
 
         {/* Action Buttons */}
         <View style={styles.actionSection}>
@@ -478,6 +503,32 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 2,
   },
+  evidenceContainer: {
+    marginBottom: 16,
+  },
+  evidenceTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#374151',
+  },
+  evidenceItem: {
+    marginRight: 12,
+    alignItems: 'center',
+  },
+  evidenceImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#3B82F6',
+  },
+  mediaIndex: {
+    marginTop: 4,
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  
   refreshButton: {
     width: 40,
     height: 40,

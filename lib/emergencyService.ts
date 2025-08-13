@@ -1,5 +1,6 @@
 import * as Location from 'expo-location';
 import { EmergencyAlert, supabase } from './supabase';
+// Removed incorrect import of Image, FlatList, Alert here — those belong in component files, not service files
 
 // Re-export EmergencyAlert for components to use
 export type { EmergencyAlert };
@@ -10,17 +11,18 @@ export class EmergencyService {
     phoneNumber: string,
     emergencyType: EmergencyAlert['emergency_type'],
     safeToCall: boolean,
-    notes?: string
+    notes?: string,
+    media_urls?: string[]
   ): Promise<{ success: boolean; incidentId?: string; error?: string }> {
     try {
       // Get current location
-      const { status } = await Location.requestForegroundPermissionsAsync()
+      const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        return { success: false, error: 'Location permission denied' }
+        return { success: false, error: 'Location permission denied' };
       }
 
-      const location = await Location.getCurrentPositionAsync({})
-      const { latitude, longitude } = location.coords
+      const location = await Location.getCurrentPositionAsync({});
+      const { latitude, longitude } = location.coords;
 
       // Insert into database
       const { data, error } = await supabase
@@ -31,20 +33,21 @@ export class EmergencyService {
           location_lng: longitude,
           emergency_type: emergencyType,
           safe_to_call: safeToCall,
-          notes: notes
+          notes: notes,
+          media_urls: media_urls || []
         })
         .select('incident_id')
-        .single()
+        .single();
 
       if (error) {
-        console.error('Error creating emergency alert:', error)
-        return { success: false, error: error.message }
+        console.error('Error creating emergency alert:', error);
+        return { success: false, error: error.message };
       }
 
-      return { success: true, incidentId: data.incident_id }
+      return { success: true, incidentId: data.incident_id };
     } catch (error) {
-      console.error('Error in createEmergencyAlert:', error)
-      return { success: false, error: 'Failed to create emergency alert' }
+      console.error('Error in createEmergencyAlert:', error);
+      return { success: false, error: 'Failed to create emergency alert' };
     }
   }
 
@@ -54,17 +57,17 @@ export class EmergencyService {
       const { data, error } = await supabase
         .from('emergency_alerts')
         .select('*')
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching emergency alerts:', error)
-        return []
+        console.error('Error fetching emergency alerts:', error);
+        return [];
       }
 
-      return data || []
+      return data || [];
     } catch (error) {
-      console.error('Error in getEmergencyAlerts:', error)
-      return []
+      console.error('Error in getEmergencyAlerts:', error);
+      return [];
     }
   }
 
@@ -77,17 +80,17 @@ export class EmergencyService {
       const { error } = await supabase
         .from('emergency_alerts')
         .update({ status })
-        .eq('incident_id', incidentId)
+        .eq('incident_id', incidentId);
 
       if (error) {
-        console.error('Error updating alert status:', error)
-        return { success: false, error: error.message }
+        console.error('Error updating alert status:', error);
+        return { success: false, error: error.message };
       }
 
-      return { success: true }
+      return { success: true };
     } catch (error) {
-      console.error('Error in updateAlertStatus:', error)
-      return { success: false, error: 'Failed to update status' }
+      console.error('Error in updateAlertStatus:', error);
+      return { success: false, error: 'Failed to update status' };
     }
   }
 
@@ -102,32 +105,32 @@ export class EmergencyService {
         .from('emergency_alerts')
         .select('media_urls')
         .eq('incident_id', incidentId)
-        .single()
+        .single();
 
       if (fetchError) {
-        console.error('Error fetching current alert:', fetchError)
-        return { success: false, error: fetchError.message }
+        console.error('Error fetching current alert:', fetchError);
+        return { success: false, error: fetchError.message };
       }
 
       // Combine existing and new media URLs
-      const currentUrls = currentAlert.media_urls || []
-      const updatedUrls = [...currentUrls, ...mediaUrls]
+      const currentUrls = currentAlert.media_urls || [];
+      const updatedUrls = [...currentUrls, ...mediaUrls];
 
       // Update with combined URLs
       const { error } = await supabase
         .from('emergency_alerts')
         .update({ media_urls: updatedUrls })
-        .eq('incident_id', incidentId)
+        .eq('incident_id', incidentId);
 
       if (error) {
-        console.error('Error adding media to alert:', error)
-        return { success: false, error: error.message }
+        console.error('Error adding media to alert:', error);
+        return { success: false, error: error.message };
       }
 
-      return { success: true }
+      return { success: true };
     } catch (error) {
-      console.error('Error in addMediaToAlert:', error)
-      return { success: false, error: 'Failed to add media' }
+      console.error('Error in addMediaToAlert:', error);
+      return { success: false, error: 'Failed to add media' };
     }
   }
 
@@ -137,17 +140,17 @@ export class EmergencyService {
       const { data, error } = await supabase
         .from('authority_contacts')
         .select('*')
-        .eq('is_active', true)
+        .eq('is_active', true);
 
       if (error) {
-        console.error('Error fetching authority contacts:', error)
-        return []
+        console.error('Error fetching authority contacts:', error);
+        return [];
       }
 
-      return data || []
+      return data || [];
     } catch (error) {
-      console.error('Error in getAuthorityContacts:', error)
-      return []
+      console.error('Error in getAuthorityContacts:', error);
+      return [];
     }
   }
 }
