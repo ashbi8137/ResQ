@@ -219,146 +219,89 @@ export default function HomeScreen() {
     setCurrentIncidentId(null);
     setShowMediaUpload(false);
   };
+
   return (
     <View style={styles.container}>
-      {/* Enhanced Header */}
+      {/* Compact Header */}
       <View style={styles.header}>
         <View style={styles.headerBackground} />
         <View style={styles.headerContent}>
           <View style={styles.headerTop}>
             <View style={styles.statusIndicator}>
               <View style={styles.statusDot} />
-              <Text style={styles.statusText}>Emergency Ready</Text>
+              <Text style={styles.statusText}>Ready</Text>
             </View>
             <View style={styles.headerIconContainer}>
-              <Ionicons name="shield-checkmark" size={28} color="#ffffff" />
+              <Ionicons name="shield-checkmark" size={20} color="#ffffff" />
             </View>
           </View>
           <Text style={styles.headerTitle}>ResQ</Text>
-          <Text style={styles.headerSubtitle}>Immediate Response System</Text>
+          <Text style={styles.headerSubtitle}>Rescue at your Fingertips</Text>
         </View>
       </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           
-          {/* Emergency Type Selection */}
+          {/* Compact Emergency Type Selection */}
           <View style={styles.sectionCard}>
             <View style={styles.sectionHeader}>
-              <View style={styles.sectionIconContainer}>
-                <Ionicons name="alert-circle" size={24} color="#DC2626" />
-              </View>
-              <View style={styles.sectionTitleContainer}>
-                <Text style={styles.sectionTitle}>Emergency Type</Text>
-                <Text style={styles.sectionSubtitle}>Select the nature of your emergency</Text>
-              </View>
+              <Ionicons name="alert-circle" size={20} color="#DC2626" />
+              <Text style={styles.sectionTitle}>Emergency Type</Text>
             </View>
 
-            <View style={styles.incidentGridContainer}>
-              {/* First row - 3 items */}
-              <View style={styles.incidentRow}>
-                {incidentTypes.slice(0, 3).map((type) => {
-                  const isSelected = selectedIncident === type.id;
-                  return (
-                    <TouchableOpacity
-                      key={type.id}
-                      style={[
-                        styles.incidentCard,
-                        styles.incidentCardThreeColumn,
-                        isSelected && styles.incidentCardSelected,
-                        { borderColor: isSelected ? type.color : '#E5E7EB' }
-                      ]}
-                      onPress={() => handleIncidentSelect(type.id)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={[
-                        styles.incidentIconContainer,
-                        { backgroundColor: isSelected ? type.color : type.bgColor }
-                      ]}>
-                        <Ionicons
-                          name={type.icon}
-                          size={28}
-                          color={isSelected ? '#ffffff' : type.color}
-                        />
+            <View style={styles.incidentGrid}>
+              {incidentTypes.map((type) => {
+                const isSelected = selectedIncident === type.id;
+                return (
+                  <TouchableOpacity
+                    key={type.id}
+                    style={[
+                      styles.incidentCard,
+                      isSelected && styles.incidentCardSelected,
+                      { borderColor: isSelected ? type.color : '#E5E7EB' }
+                    ]}
+                    onPress={() => handleIncidentSelect(type.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[
+                      styles.incidentIconContainer,
+                      { backgroundColor: isSelected ? type.color : type.bgColor }
+                    ]}>
+                      <Ionicons
+                        name={type.icon}
+                        size={16}
+                        color={isSelected ? '#ffffff' : type.color}
+                      />
+                    </View>
+                    <Text style={[
+                      styles.incidentLabel,
+                      { color: isSelected ? type.color : '#374151' }
+                    ]}>
+                      {type.label}
+                    </Text>
+                    {isSelected && (
+                      <View style={styles.selectedIndicator}>
+                        <Ionicons name="checkmark-circle" size={12} color={type.color} />
                       </View>
-                      <Text style={[
-                        styles.incidentLabel,
-                        { color: isSelected ? type.color : '#374151' }
-                      ]}>
-                        {type.label}
-                      </Text>
-                      {isSelected && (
-                        <View style={styles.selectedIndicator}>
-                          <Ionicons name="checkmark-circle" size={16} color={type.color} />
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {/* Second row - 2 items */}
-              <View style={styles.incidentRow}>
-                {incidentTypes.slice(3, 5).map((type) => {
-                  const isSelected = selectedIncident === type.id;
-                  return (
-                    <TouchableOpacity
-                      key={type.id}
-                      style={[
-                        styles.incidentCard,
-                        styles.incidentCardTwoColumn,
-                        isSelected && styles.incidentCardSelected,
-                        { borderColor: isSelected ? type.color : '#E5E7EB' }
-                      ]}
-                      onPress={() => handleIncidentSelect(type.id)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={[
-                        styles.incidentIconContainer,
-                        { backgroundColor: isSelected ? type.color : type.bgColor }
-                      ]}>
-                        <Ionicons
-                          name={type.icon}
-                          size={28}
-                          color={isSelected ? '#ffffff' : type.color}
-                        />
-                      </View>
-                      <Text style={[
-                        styles.incidentLabel,
-                        { color: isSelected ? type.color : '#374151' }
-                      ]}>
-                        {type.label}
-                      </Text>
-                      {isSelected && (
-                        <View style={styles.selectedIndicator}>
-                          <Ionicons name="checkmark-circle" size={16} color={type.color} />
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
 
-          {/* Communication Preferences */}
+          {/* Compact Communication Toggle */}
           <View style={styles.communicationToggle}>
             <View style={styles.toggleContent}>
-              <View style={styles.toggleIcon}>
-                <Ionicons
-                  name={safeToCall ? 'call' : 'chatbubble-ellipses'}
-                  size={20}
-                  color={safeToCall ? '#059669' : '#3B82F6'}
-                />
-              </View>
-              <View style={styles.toggleText}>
-                <Text style={styles.toggleTitle}>
-                  {safeToCall ? 'Safe to Call' : 'Text Only Mode'}
-                </Text>
-                <Text style={styles.toggleSubtitle}>
-                  {safeToCall ? 'Safe to call' : 'Silent situation'}
-                </Text>
-              </View>
+              <Ionicons
+                name={safeToCall ? 'call' : 'call'}
+                size={18}
+                color={safeToCall ? '#059669' : '#3B82F6'}
+              />
+              <Text style={styles.toggleTitle}>
+                {safeToCall ? 'Safe to Call' : 'Safe to Call'}
+              </Text>
             </View>
             <Switch
               value={safeToCall}
@@ -366,68 +309,62 @@ export default function HomeScreen() {
               trackColor={{ false: '#E5E7EB', true: '#DCFCE7' }}
               thumbColor={safeToCall ? '#059669' : '#6B7280'}
               ios_backgroundColor="#E5E7EB"
+              style={styles.switch}
             />
           </View>
 
-          {/* Emergency Alert Section */}
+          {/* Compact Emergency Alert Section */}
           <View style={styles.emergencySection}>
             <View style={styles.emergencyHeader}>
               <Text style={styles.emergencyTitle}>Emergency Alert</Text>
               <Text style={styles.emergencySubtitle}>
-              {pressCount === 0
-  ? 'Triple-tap the SOS button to send emergency alert'
-  : `${3 - pressCount} more tap${3 - pressCount !== 1 ? 's' : ''} required`}
-
+                {pressCount === 0
+                  ? 'Triple-tap SOS to send alert'
+                  : `${3 - pressCount} more tap${3 - pressCount !== 1 ? 's' : ''} needed`}
               </Text>
             </View>
 
-            {/* Progress Indicator */}
+            {/* Compact Progress Indicator */}
             {pressCount > 0 && (
               <View style={styles.progressContainer}>
                 <View style={styles.progressBar}>
-                <Animated.View
-  style={[
-    styles.progressFill,
-    { width: `${(pressCount / 3) * 100}%` }
-  ]}
-/>
-
+                  <Animated.View
+                    style={[
+                      styles.progressFill,
+                      { width: `${(pressCount / 3) * 100}%` }
+                    ]}
+                  />
                 </View>
                 <Text style={styles.progressText}>{pressCount}/3</Text>
               </View>
             )}
 
-{/* SOS Button */}
-<View style={styles.sosContainer}>
-  <Animated.View style={[styles.pulseWrapper, { transform: [{ scale: pulseAnim }] }]}>
-    <TouchableOpacity
-      style={[
-        styles.sosButton,
-        isLoading ? styles.sosButtonLoading : selectedIncident && styles.sosButtonReady
-      ]}
-      onPress={handlePanicPress}
-      disabled={isLoading}
-      activeOpacity={0.85}
-    >
-      <View style={styles.sosButtonInner}>
-        <Ionicons
-          name={isLoading ? 'hourglass' : 'warning'}
-          size={40}
-          color="#fff"
-          style={styles.icon}
-        />
-        <Text style={styles.sosButtonText}>
-          {isLoading ? 'SENDING' : 'SOS'}
-        </Text>
-        <Text style={styles.sosButtonSubtext}>
-          {isLoading ? 'Please wait...' : 'Emergency'}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  </Animated.View>
-</View>
-
-
+            {/* Compact SOS Button */}
+            <View style={styles.sosContainer}>
+              <Animated.View style={[styles.pulseWrapper, { transform: [{ scale: pulseAnim }] }]}>
+                <TouchableOpacity
+                  style={[
+                    styles.sosButton,
+                    isLoading ? styles.sosButtonLoading : selectedIncident && styles.sosButtonReady
+                  ]}
+                  onPress={handlePanicPress}
+                  disabled={isLoading}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.sosButtonInner}>
+                    <Ionicons
+                      name={isLoading ? 'hourglass' : 'warning'}
+                      size={28}
+                      color="#fff"
+                      style={styles.icon}
+                    />
+                    <Text style={styles.sosButtonText}>
+                      {isLoading ? 'SENDING' : 'SOS'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </Animated.View>
+            </View>
 
             {/* Selected Emergency Type Display */}
             {selectedType && (
@@ -438,84 +375,58 @@ export default function HomeScreen() {
                 ]}>
                   <Ionicons
                     name={selectedType.icon}
-                    size={20}
+                    size={14}
                     color={selectedType.color}
                   />
                 </View>
                 <Text style={styles.selectedTypeText}>
-                  Ready to send: {selectedType.label}
+                  Ready: {selectedType.label}
                 </Text>
               </View>
             )}
           </View>
-{/* Media Upload Section */}
-{showMediaUpload && currentIncidentId && (
-  <View style={styles.sectionCard}>
-    <View style={styles.sectionHeader}>
-      <View style={styles.sectionIconContainer}>
-        <Ionicons name="cloud-upload" size={24} color="#7C3AED" />
-      </View>
-      <View style={styles.sectionTitleContainer}>
-        <Text style={styles.sectionTitle}>Evidence Upload</Text>
-        <Text style={styles.sectionSubtitle}>Attach photos, videos, or audio</Text>
-      </View>
-    </View>
 
-    <Suspense fallback={
-      <View style={styles.uploadLoader}>
-        <Ionicons name="hourglass" size={24} color="#6B7280" />
-        <Text style={styles.uploadLoaderText}>Loading uploader...</Text>
-      </View>
-    }>
-      <MediaUpload
-        incidentId={currentIncidentId}
-        onUploadComplete={handleMediaUploadComplete}
-      />
-    </Suspense>
+          {/* Media Upload Section */}
+          {showMediaUpload && currentIncidentId && (
+            <View style={styles.sectionCard}>
+              <View style={styles.sectionHeader}>
+                <Ionicons name="cloud-upload" size={20} color="#7C3AED" />
+                <Text style={styles.sectionTitle}>Evidence Upload</Text>
+              </View>
 
-    {/* Close Case Button */}
-    <TouchableOpacity
-      style={{
-        backgroundColor: '#DC2626',
-        padding: 14,
-        borderRadius: 10,
-        alignItems: 'center',
-        marginTop: 16,
-      }}
-      onPress={handleCloseCase}
-      
-    >
-      <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>
-        Close Case
-      </Text>
-    </TouchableOpacity>
-  </View>
-)}
+              <Suspense fallback={
+                <View style={styles.uploadLoader}>
+                  <Ionicons name="hourglass" size={20} color="#6B7280" />
+                  <Text style={styles.uploadLoaderText}>Loading...</Text>
+                </View>
+              }>
+                <MediaUpload
+                  incidentId={currentIncidentId}
+                  onUploadComplete={handleMediaUploadComplete}
+                />
+              </Suspense>
 
+              {/* Close Case Button */}
+              <TouchableOpacity
+                style={styles.closeCaseButton}
+                onPress={handleCloseCase}
+              >
+                <Text style={styles.closeCaseButtonText}>
+                  Close Case
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
-          {/* Safety Tips */}
+          {/* Compact Safety Tips */}
           <View style={styles.tipsCard}>
             <View style={styles.tipsHeader}>
-              <Ionicons name="bulb" size={20} color="#F59E0B" />
-              <Text style={styles.tipsTitle}>Safety Reminder</Text>
+              <Ionicons name="bulb" size={16} color="#F59E0B" />
+              <Text style={styles.tipsTitle}>Safety Reminders</Text>
             </View>
             <View style={styles.tipsContent}>
-              <View style={styles.tipItem}>
-                <View style={styles.tipBullet} />
-                <Text style={styles.tipText}>Ensure your location services are enabled</Text>
-              </View>
-              <View style={styles.tipItem}>
-                <View style={styles.tipBullet} />
-                <Text style={styles.tipText}>Keep your phone charged when possible</Text>
-              </View>
-              <View style={styles.tipItem}>
-                <View style={styles.tipBullet} />
-                <Text style={styles.tipText}>Only use this for genuine emergencies</Text>
-              </View>
-              <View style={styles.tipItem}>
-                <View style={styles.tipBullet} />
-                <Text style={styles.tipText}>Stay calm and follow responder instructions</Text>
-              </View>
+              <Text style={styles.tipText}>• Enable location services • Keep phone charged</Text>
+              <Text style={styles.tipText}>• Genuine emergencies only • Follow responder instructions</Text>
             </View>
           </View>
 
@@ -537,24 +448,24 @@ const styles = StyleSheet.create({
   },
   
   content: {
-    padding: 20,
-    paddingBottom: 100,
+    padding: 16,
+    paddingBottom: 60,
   },
 
-  // Header Styles
+  // Compact Header Styles
   header: {
     position: 'relative',
     backgroundColor: '#0F172A',
-    paddingTop: Platform.OS === 'ios' ? 40 : 20,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingTop: Platform.OS === 'ios' ? 35 : 15,
+    paddingBottom: 15,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
   },
   
   headerBackground: {
@@ -564,8 +475,8 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: '#0F172A',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   
   headerContent: {
@@ -577,185 +488,155 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   
   statusIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(16, 185, 129, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: 'rgba(16, 185, 129, 0.2)',
   },
   
   statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: '#10B981',
-    marginRight: 8,
+    marginRight: 6,
   },
   
   statusText: {
     color: '#10B981',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   
   headerIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   
   headerTitle: {
     color: '#ffffff',
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   
   headerSubtitle: {
     color: '#94A3B8',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '500',
-    marginTop: 4,
+    marginTop: 2,
   },
 
-  // Section Card Styles
+  // Compact Section Card Styles
   sectionCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 24,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 20,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 4,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
   
   sectionHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 24,
-  },
-  
-  sectionIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#F3F4F6',
-    justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
-  },
-  
-  sectionTitleContainer: {
-    flex: 1,
+    marginBottom: 16,
   },
   
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '700',
     color: '#1F2937',
-    marginBottom: 4,
-  },
-  
-  sectionSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    lineHeight: 20,
+    marginLeft: 8,
   },
 
-  // Incident Grid Styles
-  incidentGridContainer: {
-    marginTop: 16,
-  },
-  
-  incidentRow: {
+  // Compact Incident Grid Styles
+  incidentGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    gap: 8,
   },
   
   incidentCard: {
     backgroundColor: '#F9FAFB',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 2,
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1.5,
     position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 120,
-  },
-  
-  incidentCardThreeColumn: {
-    flex: 0.32,
-  },
-  
-  incidentCardTwoColumn: {
-    flex: 0.48,
+    width: '30%',
+    minHeight: 80,
   },
   
   incidentCardSelected: {
     backgroundColor: '#ffffff',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 4,
   },
   
   incidentIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 6,
   },
   
   incidentLabel: {
-    fontSize: 14,
-    fontWeight: '700',
+    fontSize: 10,
+    fontWeight: '600',
     textAlign: 'center',
-    lineHeight: 18,
+    lineHeight: 12,
   },
   
   selectedIndicator: {
     position: 'absolute',
-    top: 12,
-    right: 12,
+    top: 6,
+    right: 6,
     backgroundColor: '#ffffff',
-    borderRadius: 10,
-    padding: 2,
+    borderRadius: 8,
+    padding: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 2,
     elevation: 2,
   },
 
-  // Communication Toggle Styles
+  // Compact Communication Toggle Styles
   communicationToggle: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 16,
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
@@ -766,122 +647,105 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   
-  toggleIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  
-  toggleText: {
-    flex: 1,
-  },
-  
   toggleTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 2,
-  },
-  
-  toggleSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
+    marginLeft: 8,
   },
 
-  // Emergency Section Styles
+  switch: {
+    transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }],
+  },
+
+  // Compact Emergency Section Styles
   emergencySection: {
     backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 20,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 4,
     borderWidth: 1,
     borderColor: '#f1f5f9',
   },
   
   emergencyHeader: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   
   emergencyTitle: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '700',
     color: '#1f2937',
-    marginBottom: 8,
+    marginBottom: 4,
     textAlign: 'center',
   },
   
   emergencySubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#6b7280',
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 18,
   },
 
-  // Progress Indicator Styles
+  // Compact Progress Indicator Styles
   progressContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   
   progressBar: {
     width: '100%',
-    height: 8,
+    height: 6,
     backgroundColor: '#f3f4f6',
-    borderRadius: 4,
+    borderRadius: 3,
     overflow: 'hidden',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   
   progressFill: {
     height: '100%',
     backgroundColor: '#ef4444',
-    borderRadius: 4,
+    borderRadius: 3,
   },
   
   progressText: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: '#ef4444',
   },
 
-  // SOS Button Styles
+  // Compact SOS Button Styles
   sosContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 16,
   },
   
   pulseWrapper: {
-    borderRadius: 100,
+    borderRadius: 60,
   },
   
   sosButton: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: '#000000ff',
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: '#6B7280',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#ef4444',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
   },
   
   sosButtonReady: {
-    backgroundColor: '#ca2020ff',
+    backgroundColor: '#DC2626',
     shadowColor: '#dc2626',
   },
   
@@ -895,24 +759,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   
-  iconContainer: {
-    marginBottom: 8,
-  },
-  
   sosButtonText: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '800',
     color: '#ffffff',
-    marginBottom: 4,
+    marginTop: 4,
   },
-  
-  sosButtonSubtext: {
-    fontSize: 14,
-    color: '#ffffff',
-    opacity: 0.9,
-  },
-
-
 
   // Selected Type Display Styles
   selectedTypeDisplay: {
@@ -920,23 +772,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 8,
+    padding: 10,
     borderWidth: 1,
     borderColor: '#e2e8f0',
   },
   
   selectedTypeIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 8,
   },
   
   selectedTypeText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#374151',
   },
@@ -944,20 +796,35 @@ const styles = StyleSheet.create({
   // Upload Loader Styles
   uploadLoader: {
     alignItems: 'center',
-    padding: 32,
+    padding: 20,
   },
   
   uploadLoaderText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6b7280',
-    marginTop: 8,
+    marginTop: 6,
   },
 
-  // Safety Tips Styles
+  // Close Case Button
+  closeCaseButton: {
+    backgroundColor: '#DC2626',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+
+  closeCaseButtonText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+
+  // Compact Safety Tips Styles
   tipsCard: {
     backgroundColor: '#fffbeb',
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 12,
+    padding: 12,
     borderWidth: 1,
     borderColor: '#fbbf24',
   },
@@ -965,38 +832,23 @@ const styles = StyleSheet.create({
   tipsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
   
   tipsTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: '#92400e',
-    marginLeft: 8,
+    marginLeft: 6,
   },
   
   tipsContent: {
-    gap: 12,
-  },
-  
-  tipItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-  },
-  
-  tipBullet: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#f59e0b',
-    marginTop: 6,
-    marginRight: 12,
+    gap: 4,
   },
   
   tipText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#92400e',
-    flex: 1,
-    lineHeight: 20,
+    lineHeight: 16,
   },
 });
