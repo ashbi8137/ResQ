@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons'
 import { useEffect, useState } from 'react'
-import { Alert, FlatList, Platform, RefreshControl, Image,StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, FlatList, Platform, RefreshControl, Image,StyleSheet, Text, TouchableOpacity, View, Linking } from 'react-native'
 import { EmergencyAlert, EmergencyService } from '../lib/emergencyService'
+
 
 
 export default function AuthorityDashboard() {
@@ -15,7 +16,7 @@ export default function AuthorityDashboard() {
     // Auto refresh every 30 seconds
     const interval = setInterval(loadAlerts, 30000)
     return () => clearInterval(interval)
-  }, [])
+  },  )
 
   const loadAlerts = async () => {
     try {
@@ -294,15 +295,29 @@ export default function AuthorityDashboard() {
           <TouchableOpacity
             style={[styles.actionButton, styles.locationButton]}
             onPress={() => {
-              Alert.alert(
-                '📍 Location Details',
-                `Coordinates: ${item.location_lat.toFixed(6)}, ${item.location_lng.toFixed(6)}\n\nWould you like to open this location in maps?`,
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Open Maps', onPress: () => console.log('Opening maps...') }
-                ]
-              )
-            }}
+  const { location_lat, location_lng } = item;
+  const label = 'Emergency Location';
+  
+  let url = '';
+
+  if (Platform.OS === 'ios') {
+    url = `http://maps.apple.com/?ll=${location_lat},${location_lng}&q=${label}`;
+  } else {
+    // Android
+    url = `geo:${location_lat},${location_lng}?q=${location_lat},${location_lng}(${label})`;
+  }
+
+  Linking.canOpenURL(url)
+    .then(supported => {
+      if (supported) {
+        Linking.openURL(url);
+      } else {
+        Alert.alert('Error', 'Unable to open maps.');
+      }
+    })
+    .catch(err => console.error('An error occurred', err));
+}}
+
           >
             <Ionicons name="map" size={16} color="white" />
             <Text style={styles.actionButtonText}>Map</Text>
